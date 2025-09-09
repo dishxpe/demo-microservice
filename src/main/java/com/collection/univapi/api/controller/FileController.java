@@ -32,12 +32,16 @@ public class FileController {
     }
 
     @PostMapping("/move")
-    public String moveFile(@RequestParam String sourceDir, @RequestParam String targetDir, @RequestParam String fileName) throws IOException {
+    public String moveFile(@RequestParam String sourceDir,
+                           @RequestParam String targetDir,
+                           @RequestParam String fileName) throws IOException {
         return fileService.moveFile(sourceDir, fileName, targetDir);
     }
 
     @PostMapping("/copy")
-    public String copyFile(@RequestParam String sourceDir, @RequestParam String targetDir, @RequestParam String fileName) throws IOException {
+    public String copyFile(@RequestParam String sourceDir,
+                           @RequestParam String targetDir,
+                           @RequestParam String fileName) throws IOException {
         return fileService.copyFile(sourceDir, fileName, targetDir);
     }
 }
