@@ -22,7 +22,7 @@ public class FileService {
         Path path = dir.resolve(request.getFileName());
         Files.write(path, data);
 
-        return "File saved at: " + path.toString();
+        return "File saved at: " + path;
     }
 
     public String readFile(FileRequest request) throws IOException {
