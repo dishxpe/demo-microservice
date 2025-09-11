@@ -10,22 +10,64 @@ import java.util.Base64;
 @Service
 public class FileService {
 
-    public String saveFile(FileRequest request) throws IOException {
-        byte[] data = Base64.getDecoder().decode(request.getBase64Data());
-        Path dir = Paths.get(request.getDirectory());
+    private static Path getTargetDir(FileRequest request, Path baseDir) {
+        String dir = request.getDirectory();
 
-
-        if (!Files.exists(dir)) {
-            Files.createDirectories(dir);
+        if (dir == null || dir.isEmpty()) {
+            throw new SecurityException("Directory Name cannot be empty.");
         }
 
-        Path path = dir.resolve(request.getFileName());
-        Files.write(path, data);
+        if (dir.contains("..") || dir.contains("/") || dir.contains("\\") || dir.startsWith(".")) {
+            throw new SecurityException("Invalid directory name");
+        }
 
-        return "File saved at: " + path;
+        String fileName = request.getFileName();
+        if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
+            throw new SecurityException("Invalid file name");
+        }
+
+        if (fileName == null || fileName.trim().isEmpty()) {
+            throw new SecurityException("File name cannot be empty.");
+        }
+
+        Path targetDir = baseDir.resolve(dir).normalize();
+        if (!targetDir.startsWith(baseDir)) {
+            throw new SecurityException("Invalid directory path");
+        }
+
+
+        return targetDir;
     }
 
+    public String saveFile(FileRequest request) throws IOException {
+        byte[] data = Base64.getDecoder().decode(request.getBase64Data());
+
+        Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
+
+        Path targetDir = getTargetDir(request, baseDir);
+
+        Files.createDirectories(targetDir);
+
+        Path targetFile = targetDir.resolve(request.getFileName()).normalize();
+        if (!targetFile.startsWith(baseDir)) {
+            throw new SecurityException("Invalid file path");
+        }
+
+        Files.write(targetFile, data);
+
+        return targetFile.toString();
+    }
+
+
     public String readFile(FileRequest request) throws IOException {
+
+        Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
+
+        Path targetDir = baseDir.resolve(request.getDirectory()).normalize();
+        if (!targetDir.startsWith(baseDir)) {
+            throw new SecurityException("Invalid directory path");
+        }
+
         Path path = Paths.get(request.getDirectory(), request.getFileName());
         byte[] data = Files.readAllBytes(path);
         return Base64.getEncoder().encodeToString(data);
