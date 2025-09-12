@@ -1,5 +1,6 @@
 package com.collection.univapi.api.controller;
 
+import com.collection.univapi.api.model.FileMetadata;
 import com.collection.univapi.api.model.FileRequest;
 import com.collection.univapi.api.service.FileService;
 import org.springframework.web.bind.annotation.*;
@@ -44,4 +45,10 @@ public class FileController {
                            @RequestParam String fileName) throws IOException {
         return fileService.copyFile(sourceDir, fileName, targetDir);
     }
+
+    @PostMapping("/metadata")
+    public FileMetadata getFileMetadata(@RequestBody FileRequest request) throws IOException {
+        return fileService.getFileMetadata(request);
+    }
+
 }

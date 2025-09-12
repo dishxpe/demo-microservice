@@ -1,10 +1,15 @@
 package com.collection.univapi.api.service;
 
+import com.collection.univapi.api.model.FileMetadata;
 import com.collection.univapi.api.model.FileRequest;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.function.BiConsumer;
 
@@ -140,4 +145,55 @@ public class FileService {
                 "File copied successfully to: ",
                 "Error copying file: ");
     }
+
+    public FileMetadata getFileMetadata(FileRequest request) throws IOException {
+        Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
+        Path targetFile = getTargetFile(request, baseDir);
+
+        if (!Files.exists(targetFile)) {
+            throw new FileNotFoundException("File not found: " + targetFile);
+        }
+
+        BasicFileAttributes attrs = Files.readAttributes(targetFile, BasicFileAttributes.class);
+        long size = attrs.size();
+        Instant lastModified = attrs.lastModifiedTime().toInstant();
+
+
+        String mimeType = Files.probeContentType(targetFile);
+        if (mimeType == null) {
+            mimeType = "application/octet-stream"; // fallback
+        }
+
+        String hash = computeFileHash(targetFile, "MD5");
+
+        return new FileMetadata(
+                targetFile.getFileName().toString(),
+                request.getDirectory(),
+                size,
+                mimeType,
+                lastModified,
+                hash
+        );
+    }
+
+    private String computeFileHash(Path file, String algorithm) throws IOException {
+        try (InputStream is = Files.newInputStream(file)) {
+            MessageDigest digest = MessageDigest.getInstance(algorithm);
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = is.read(buffer)) != -1) {
+                digest.update(buffer, 0, read);
+            }
+            byte[] hashBytes = digest.digest();
+
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashBytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Unsupported hash algorithm: " + algorithm, e);
+        }
+    }
+
 }
