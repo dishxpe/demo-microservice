@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.nio.file.*;
 import java.util.Base64;
+import java.util.function.BiConsumer;
 
 @Service
 public class FileService {
@@ -14,7 +15,7 @@ public class FileService {
         String dir = request.getDirectory();
 
         if (dir == null || dir.isEmpty()) {
-            throw new SecurityException("Directory Name cannot be empty.");
+            throw new SecurityException("Directory name cannot be empty.");
         }
 
         if (dir.contains("..") || dir.contains("/") || dir.contains("\\") || dir.startsWith(".")) {
@@ -22,12 +23,13 @@ public class FileService {
         }
 
         String fileName = request.getFileName();
-        if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
-            throw new SecurityException("Invalid file name");
-        }
 
         if (fileName == null || fileName.trim().isEmpty()) {
             throw new SecurityException("File name cannot be empty.");
+        }
+
+        if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
+            throw new SecurityException("Invalid file name");
         }
 
         Path targetDir = baseDir.resolve(dir).normalize();
@@ -35,54 +37,32 @@ public class FileService {
             throw new SecurityException("Invalid directory path");
         }
 
-
         return targetDir;
     }
 
-    public String saveFile(FileRequest request) throws IOException {
-        byte[] data = Base64.getDecoder().decode(request.getBase64Data());
-
-        Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
-
+    private static Path getTargetFile (FileRequest request, Path baseDir) throws IOException {
         Path targetDir = getTargetDir(request, baseDir);
-
-        Files.createDirectories(targetDir);
-
         Path targetFile = targetDir.resolve(request.getFileName()).normalize();
         if (!targetFile.startsWith(baseDir)) {
             throw new SecurityException("Invalid file path");
         }
-
-        Files.write(targetFile, data);
-
-        return targetFile.toString();
+        return targetFile;
     }
 
-
-    public String readFile(FileRequest request) throws IOException {
-
+    private static String transferFile (String sourceDir, String fileName, String targetDir, BiConsumer<Path, Path> operation, String successMessage, String errorMessage) {
         Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
 
-        Path targetDir = baseDir.resolve(request.getDirectory()).normalize();
-        if (!targetDir.startsWith(baseDir)) {
-            throw new SecurityException("Invalid directory path");
+        FileRequest sourceReq = new FileRequest(sourceDir, fileName, null);
+        FileRequest targetReq = new FileRequest(targetDir, fileName, null);
+
+        Path sourcePath;
+        Path targetPath;
+        try {
+            sourcePath = getTargetFile(sourceReq, baseDir);
+            targetPath = getTargetFile(targetReq, baseDir);
+        } catch (IOException e) {
+            return "Error: " + e.getMessage();
         }
-
-        Path path = Paths.get(request.getDirectory(), request.getFileName());
-        byte[] data = Files.readAllBytes(path);
-        return Base64.getEncoder().encodeToString(data);
-    }
-
-    public String deleteFile(FileRequest request) throws IOException {
-        Path path = Paths.get(request.getDirectory(), request.getFileName());
-        Files.deleteIfExists(path);
-        return "File deleted successfully from: " + path;
-    }
-
-    public String moveFile(String sourceDir, String fileName, String targetDir) throws IOException {
-        Path sourcePath = Paths.get(sourceDir, fileName);
-        Path targetPath = Paths.get(targetDir, fileName);
-        Path targetDirPath = Paths.get(targetDir);
 
         if (!Files.exists(sourcePath)) {
             return "Error: Source file does not exist: " + sourcePath;
@@ -92,40 +72,72 @@ public class FileService {
             return "Error: Source and target paths are the same: " + sourcePath;
         }
 
-        if (!Files.exists(targetDirPath)) {
-            Files.createDirectories(targetDirPath);
+        try {
+            Files.createDirectories(targetPath.getParent());
+            operation.accept(sourcePath, targetPath);
+            return successMessage + targetPath;
+        } catch (IOException e) {
+            return errorMessage + e.getMessage();
         }
 
-        try {
-            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-            return "File moved successfully to: " + targetPath;
-        } catch (IOException e) {
-            return "Error moving file: " + e.getMessage();
-        }
     }
 
-    public String copyFile(String sourceDir, String fileName, String targetDir) throws IOException {
-        Path sourcePath = Paths.get(sourceDir, fileName);
-        Path targetPath = Paths.get(targetDir, fileName);
-        Path targetDirPath = Paths.get(targetDir);
+    public String saveFile(FileRequest request) throws IOException {
+        byte[] data = Base64.getDecoder().decode(request.getBase64Data());
 
-        if (!Files.exists(sourcePath)) {
-            return "Error: Source file does not exist: " + sourcePath;
-        }
+        Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
 
-        if (sourcePath.equals(targetPath)) {
-            return "Error: Cannot copy file to the same location: " + sourcePath;
-        }
+        Path targetDir = getTargetDir(request, baseDir);
+        Files.createDirectories(getTargetDir(request, baseDir));
 
-        if (!Files.exists(targetDirPath)) {
-            Files.createDirectories(targetDirPath);
-        }
+        Path targetFile = getTargetFile(request, baseDir);
+        Files.write(targetFile, data);
 
-        try {
-            Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-            return "File copied successfully to: " + targetPath;
-        } catch (IOException e) {
-            return "Error copying file: " + e.getMessage();
-        }
+        return targetFile.toString();
+    }
+
+
+    public String readFile(FileRequest request) throws IOException {
+
+        Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
+        Path targetFile = getTargetFile(request, baseDir);
+
+        byte[] data = Files.readAllBytes(targetFile);
+        return Base64.getEncoder().encodeToString(data);
+    }
+
+    public String deleteFile(FileRequest request) throws IOException {
+
+        Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
+        Path targetFile = getTargetFile(request, baseDir);
+
+        Files.deleteIfExists(targetFile);
+        return "File deleted successfully from: " + targetFile;
+    }
+
+    public String moveFile(String sourceDir, String fileName, String targetDir) {
+        return transferFile(sourceDir, fileName, targetDir,
+                (source, target) -> {
+                    try {
+                        Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                },
+                "File moved successfully to: ",
+                "Error moving file: ");
+    }
+
+    public String copyFile(String sourceDir, String fileName, String targetDir) {
+        return transferFile(sourceDir, fileName, targetDir,
+                (source, target) -> {
+                    try {
+                        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                },
+                "File copied successfully to: ",
+                "Error copying file: ");
     }
 }
