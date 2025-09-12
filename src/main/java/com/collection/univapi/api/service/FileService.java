@@ -52,8 +52,8 @@ public class FileService {
     private static String transferFile (String sourceDir, String fileName, String targetDir, BiConsumer<Path, Path> operation, String successMessage, String errorMessage) {
         Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
 
-        FileRequest sourceReq = new FileRequest(sourceDir, fileName, null);
-        FileRequest targetReq = new FileRequest(targetDir, fileName, null);
+        FileRequest sourceReq = new FileRequest(fileName, sourceDir, null);
+        FileRequest targetReq = new FileRequest(fileName, targetDir, null);
 
         Path sourcePath;
         Path targetPath;
