@@ -3,6 +3,7 @@ package com.collection.univapi.api.controller;
 import com.collection.univapi.api.model.DirectoryRequest;
 import com.collection.univapi.api.model.FileMetadata;
 import com.collection.univapi.api.model.FileRequest;
+import com.collection.univapi.api.model.FileSearchRequest;
 import com.collection.univapi.api.service.metadata.FileMetadataService;
 import com.collection.univapi.api.service.util.FileSecurityUtil;
 import com.collection.univapi.api.service.storage.LocalFileStorageService;
@@ -47,16 +48,12 @@ public class FileController {
     }
 
     @PostMapping("/move")
-    public String moveFile(@RequestParam String sourceDir,
-                           @RequestParam String targetDir,
-                           @RequestParam String fileName) throws IOException {
+    public String moveFile(@RequestParam String sourceDir, @RequestParam String targetDir, @RequestParam String fileName) {
         return fileTransferService.moveFile(sourceDir, fileName, targetDir);
     }
 
     @PostMapping("/copy")
-    public String copyFile(@RequestParam String sourceDir,
-                           @RequestParam String targetDir,
-                           @RequestParam String fileName) throws IOException {
+    public String copyFile(@RequestParam String sourceDir, @RequestParam String targetDir, @RequestParam String fileName) {
         return fileTransferService.copyFile(sourceDir, fileName, targetDir);
     }
 
@@ -68,6 +65,11 @@ public class FileController {
     @PostMapping("/list")
     public List<FileMetadata> listFiles(@RequestBody DirectoryRequest request) throws IOException {
         return fileMetadataService.listFiles(request);
+    }
+
+    @PostMapping("/search")
+    public List<FileMetadata> searchFiles(@RequestBody FileSearchRequest request) throws IOException {
+        return fileMetadataService.searchFiles(request, request.isRecursive());
     }
 
 
