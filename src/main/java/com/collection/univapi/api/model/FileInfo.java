@@ -8,5 +8,6 @@ public interface FileInfo {
     long getSize();
     String getMimeType();
     Instant getLastModified();
-    String getHash();
+    String getMd5();
+    String getSha256();
 }

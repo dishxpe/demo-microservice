@@ -102,10 +102,12 @@ public class FileMetadataService {
         Instant lastModified = attrs.lastModifiedTime().toInstant();
         String mimeType = Files.probeContentType(path);
         if (mimeType == null) mimeType = "application/octet-stream";
-        String hash = computeFileHash(path, "MD5");
+
+        String md5 = computeFileHash(path, "MD5");
+        String sha256 = computeFileHash(path, "SHA-256");
 
         Path relativeDirPath = baseDir.relativize(path.getParent());
-        String directory = relativeDirPath.toString().replace("\\", "/"); // Windows-safe
+        String directory = relativeDirPath.toString().replace("\\", "/");
 
         return new FileMetadata(
                 path.getFileName().toString(),
@@ -113,9 +115,17 @@ public class FileMetadataService {
                 size,
                 mimeType,
                 lastModified,
-                hash
+                md5,
+                sha256
         );
     }
+
+    public boolean verifyFileHash(Path file, String expectedHash, String algorithm) throws IOException {
+        String actualHash = computeFileHash(file, algorithm);
+        return actualHash.equalsIgnoreCase(expectedHash);
+    }
+
+
 
     private String computeFileHash(Path file, String algorithm) throws IOException {
         try (InputStream is = Files.newInputStream(file)) {
