@@ -1,9 +1,9 @@
 package com.collection.univapi.api.controller;
 
-import com.collection.univapi.api.model.DirectoryRequest;
-import com.collection.univapi.api.model.FileMetadata;
-import com.collection.univapi.api.model.FileRequest;
-import com.collection.univapi.api.model.FileSearchRequest;
+import com.collection.univapi.api.model.file.DirectoryRequest;
+import com.collection.univapi.api.model.file.FileMetadata;
+import com.collection.univapi.api.model.file.FileRequest;
+import com.collection.univapi.api.model.file.FileSearchRequest;
 import com.collection.univapi.api.service.metadata.FileMetadataService;
 import com.collection.univapi.api.service.util.FileSecurityUtil;
 import com.collection.univapi.api.service.storage.LocalFileStorageService;

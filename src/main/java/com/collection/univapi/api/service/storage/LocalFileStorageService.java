@@ -1,6 +1,6 @@
 package com.collection.univapi.api.service.storage;
 
-import com.collection.univapi.api.model.FileRequest;
+import com.collection.univapi.api.model.file.FileRequest;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
