@@ -11,5 +11,7 @@ public class FileMetadata implements FileInfo {
     private long size;
     private String mimeType;
     private Instant lastModified;
-    private String hash;
+    private String md5;
+    private String sha256;
 }
+

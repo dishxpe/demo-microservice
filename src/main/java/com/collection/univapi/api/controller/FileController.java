@@ -3,6 +3,7 @@ package com.collection.univapi.api.controller;
 import com.collection.univapi.api.model.DirectoryRequest;
 import com.collection.univapi.api.model.FileMetadata;
 import com.collection.univapi.api.model.FileRequest;
+import com.collection.univapi.api.model.FileSearchRequest;
 import com.collection.univapi.api.service.metadata.FileMetadataService;
 import com.collection.univapi.api.service.util.FileSecurityUtil;
 import com.collection.univapi.api.service.storage.LocalFileStorageService;
@@ -10,6 +11,7 @@ import com.collection.univapi.api.service.storage.FileTransferService;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 @RestController
@@ -47,16 +49,12 @@ public class FileController {
     }
 
     @PostMapping("/move")
-    public String moveFile(@RequestParam String sourceDir,
-                           @RequestParam String targetDir,
-                           @RequestParam String fileName) throws IOException {
+    public String moveFile(@RequestParam String sourceDir, @RequestParam String targetDir, @RequestParam String fileName) {
         return fileTransferService.moveFile(sourceDir, fileName, targetDir);
     }
 
     @PostMapping("/copy")
-    public String copyFile(@RequestParam String sourceDir,
-                           @RequestParam String targetDir,
-                           @RequestParam String fileName) throws IOException {
+    public String copyFile(@RequestParam String sourceDir, @RequestParam String targetDir, @RequestParam String fileName) {
         return fileTransferService.copyFile(sourceDir, fileName, targetDir);
     }
 
@@ -70,5 +68,15 @@ public class FileController {
         return fileMetadataService.listFiles(request);
     }
 
+    @PostMapping("/search")
+    public List<FileMetadata> searchFiles(@RequestBody FileSearchRequest request) throws IOException {
+        return fileMetadataService.searchFiles(request, request.isRecursive());
+    }
 
+    @PostMapping("/verify")
+    public boolean verifyFile(@RequestBody FileRequest request, @RequestParam String hash, @RequestParam String algorithm) throws IOException {
+        Path baseDir = Path.of("uploads").toAbsolutePath().normalize();
+        Path targetFile = FileSecurityUtil.getTargetFile(request, baseDir);
+        return fileMetadataService.verifyFileHash(targetFile, hash, algorithm);
+    }
 }
