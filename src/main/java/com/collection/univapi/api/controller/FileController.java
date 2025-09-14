@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/file")
@@ -34,29 +35,64 @@ public class FileController {
     }
 
     @PostMapping("/upload")
-    public String uploadFile(@RequestBody FileRequest request) throws IOException {
-        return localFileStorageService.saveFile(request);
+    public Map<String, Object> uploadFile(@RequestBody FileRequest request) throws IOException {
+        String savedPath = localFileStorageService.saveFile(request);
+        return Map.of(
+                "status", "success",
+                "message", "File saved successfully",
+                "path", savedPath
+        );
     }
 
     @PostMapping("/download")
-    public String downloadFile(@RequestBody FileRequest request) throws IOException {
-        return localFileStorageService.readFile(request);
+    public Map<String, Object> readFile(@RequestBody FileRequest request) throws IOException {
+        String base64Data = localFileStorageService.readFile(request);
+        return Map.of(
+                "status", "success",
+                "message", "File downloaded successfully",
+                "fileName", request.getFileName(),
+                "directory", request.getDirectory(),
+                "base64Data", base64Data
+        );
     }
 
     @PostMapping("/delete")
-    public String deleteFile(@RequestBody FileRequest request) throws IOException {
-        return localFileStorageService.deleteFile(request);
+    public Map<String, Object> deleteFile(@RequestBody FileRequest request) throws IOException {
+        String result = localFileStorageService.deleteFile(request);
+        return Map.of(
+                "status", "success",
+                "message", result
+        );
     }
 
     @PostMapping("/move")
-    public String moveFile(@RequestParam String sourceDir, @RequestParam String targetDir, @RequestParam String fileName) {
-        return fileTransferService.moveFile(sourceDir, fileName, targetDir);
+    public Map<String, Object> moveFile(
+            @RequestParam String sourceDir,
+            @RequestParam String targetDir,
+            @RequestParam String fileName) {
+
+        String result = fileTransferService.moveFile(sourceDir, fileName, targetDir);
+
+        return Map.of(
+                "status", result.startsWith("Error") ? "error" : "success",
+                "message", result
+        );
     }
 
     @PostMapping("/copy")
-    public String copyFile(@RequestParam String sourceDir, @RequestParam String targetDir, @RequestParam String fileName) {
-        return fileTransferService.copyFile(sourceDir, fileName, targetDir);
+    public Map<String, Object> copyFile(
+            @RequestParam String sourceDir,
+            @RequestParam String targetDir,
+            @RequestParam String fileName) {
+
+        String result = fileTransferService.copyFile(sourceDir, fileName, targetDir);
+
+        return Map.of(
+                "status", result.startsWith("Error") ? "error" : "success",
+                "message", result
+        );
     }
+
 
     @PostMapping("/metadata")
     public FileMetadata getFileMetadata(@RequestBody FileRequest request) throws IOException {

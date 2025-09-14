@@ -1,6 +1,7 @@
 package com.collection.univapi.api.service.storage;
 
 import com.collection.univapi.api.model.file.FileRequest;
+import com.collection.univapi.api.service.util.PathUtil;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -31,17 +32,17 @@ public class FileTransferService {
         }
 
         if (!Files.exists(sourcePath)) {
-            return "Error: Source file does not exist: " + sourcePath;
+            return "Error: Source file does not exist: " + PathUtil.normalize(sourcePath);
         }
 
         if (sourcePath.equals(targetPath)) {
-            return "Error: Source and target paths are the same: " + sourcePath;
+            return "Error: Source and target paths are the same: " + PathUtil.normalize(sourcePath);
         }
 
         try {
             Files.createDirectories(targetPath.getParent());
             operation.accept(sourcePath, targetPath);
-            return successMessage + targetPath;
+            return successMessage + PathUtil.normalize(sourcePath);
         } catch (IOException e) {
             return errorMessage + e.getMessage();
         }

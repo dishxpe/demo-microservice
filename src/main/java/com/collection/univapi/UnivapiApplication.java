@@ -2,9 +2,13 @@ package com.collection.univapi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.scheduling.annotation.EnableAsync;
 
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+
+@SpringBootApplication
+@EntityScan("com.collection.univapi.api.model")
+@EnableAsync
 public class UnivapiApplication {
 
     public static void main(String[] args) {

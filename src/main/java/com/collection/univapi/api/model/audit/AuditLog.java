@@ -18,12 +18,12 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     private String appId;
     private String endpoint;
     private String method;
 
     private Integer statusCode;
+    private String errorMessage;
 
     private Instant timestamp;
 }
