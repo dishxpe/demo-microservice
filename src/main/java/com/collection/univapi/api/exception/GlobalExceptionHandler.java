@@ -5,7 +5,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -30,59 +28,33 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(FileNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleFileNotFound(FileNotFoundException ex) {
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of(
-                        "status", "error",
-                        "message", "File not found",
-                        "details", ex.getMessage()
-                ));
+    public ResponseEntity<Map<String, Object>> handleFileNotFound(FileNotFoundException ex, HttpServletRequest request) {
+        return logAndRespond("File not found", ex, request, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<?> handleSecurity(SecurityException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(Map.of("error", ex.getMessage()));
+    public ResponseEntity<?> handleSecurity(SecurityException ex, HttpServletRequest request) {
+        return logAndRespond("Access denied", ex, request, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(UncheckedIOException.class)
-    public ResponseEntity<?> handleIO(UncheckedIOException ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "File system error: " + ex.getMessage()));
+    public ResponseEntity<?> handleIO(UncheckedIOException ex, HttpServletRequest request) {
+        return logAndRespond("File system error", ex, request, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of(
-                        "status", "error",
-                        "message", "Unexpected error occurred",
-                        "details", ex.getMessage()
-                ));
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex, HttpServletRequest request) {
+        return logAndRespond("Invalid Base64 data", ex, request, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidBase64(IllegalArgumentException ex) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of(
-                        "status", "error",
-                        "message", "Invalid Base64 data",
-                        "details", ex.getMessage()
-                ));
+    public ResponseEntity<Map<String, Object>> handleInvalidBase64(IllegalArgumentException ex, HttpServletRequest request) {
+        return logAndRespond("Unexpected error occurred", ex, request, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(IOException.class)
-    public ResponseEntity<Map<String, Object>> handleIOException(IOException ex) {
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of(
-                        "status", "error",
-                        "message", "File operation failed",
-                        "details", ex.getMessage()
-                ));
+    public ResponseEntity<Map<String, Object>> handleIOException(IOException ex, HttpServletRequest request) {
+        return logAndRespond("File operation failed", ex, request, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // Common method to log and respond safely

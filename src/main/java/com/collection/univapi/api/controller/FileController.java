@@ -8,11 +8,8 @@ import com.collection.univapi.api.service.metadata.FileMetadataService;
 import com.collection.univapi.api.service.util.FileSecurityUtil;
 import com.collection.univapi.api.service.storage.LocalFileStorageService;
 import com.collection.univapi.api.service.storage.FileTransferService;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
