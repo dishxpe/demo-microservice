@@ -1,7 +1,6 @@
 package com.collection.univapi.api.config;
 
 import com.collection.univapi.api.service.auth.ApiKeyAuthService;
-import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;

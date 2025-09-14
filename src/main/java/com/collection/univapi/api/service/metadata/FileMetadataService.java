@@ -28,11 +28,7 @@ public class FileMetadataService {
 
     public List<FileMetadata> searchFiles(FileSearchRequest request, boolean recursive) throws IOException {
         Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
-        Path targetDir = FileSecurityUtil.getTargetDirectoryOnly(request.getDirectory(), baseDir);
-
-        if (!Files.exists(targetDir) || !Files.isDirectory(targetDir)) {
-            throw new FileNotFoundException("Directory not found: " + targetDir);
-        }
+        Path targetDir = resolveTargetDirectory(request.getDirectory(), baseDir);
 
         try (Stream<Path> paths = recursive ? Files.walk(targetDir) : Files.list(targetDir)) {
             return paths.filter(Files::isRegularFile)
@@ -40,7 +36,6 @@ public class FileMetadataService {
                         try {
                             FileMetadata metadata = buildFileMetadata(path, baseDir);
 
-                            // Apply filters
                             if (request.getQuery() != null && !metadata.getFileName().contains(request.getQuery())) {
                                 return null;
                             }
@@ -64,6 +59,7 @@ public class FileMetadataService {
         }
     }
 
+
     public FileMetadata getFileMetadata(FileRequest request) throws IOException {
         Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
         Path targetFile = FileSecurityUtil.getTargetFile(request, baseDir);
@@ -77,11 +73,7 @@ public class FileMetadataService {
 
     public List<FileMetadata> listFiles(DirectoryRequest request) throws IOException {
         Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
-        Path targetDir = FileSecurityUtil.getTargetDirectoryOnly(request.getDirectory(), baseDir);
-
-        if (!Files.exists(targetDir) || !Files.isDirectory(targetDir)) {
-            throw new FileNotFoundException("Directory not found: " + targetDir);
-        }
+        Path targetDir = resolveTargetDirectory(request.getDirectory(), baseDir);
 
         try (Stream<Path> paths = Files.list(targetDir)) {
             return paths.filter(Files::isRegularFile)
@@ -95,6 +87,24 @@ public class FileMetadataService {
                     .collect(Collectors.toList());
         }
     }
+
+    private Path resolveTargetDirectory(String directory, Path baseDir) throws IOException {
+        Path targetDir;
+
+        if (directory == null || directory.isBlank()) {
+            targetDir = baseDir; // default to base uploads dir
+        } else {
+            targetDir = FileSecurityUtil.getTargetDirectoryOnly(directory, baseDir);
+        }
+
+        if (!Files.exists(targetDir) || !Files.isDirectory(targetDir)) {
+            throw new FileNotFoundException("Directory not found: " + targetDir);
+        }
+
+        return targetDir;
+    }
+
+
 
     private FileMetadata buildFileMetadata(Path path, Path baseDir) throws IOException {
         BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
