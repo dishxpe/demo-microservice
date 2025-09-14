@@ -2,17 +2,21 @@ package com.collection.univapi.api.service.audit;
 
 import com.collection.univapi.api.model.audit.AuditLog;
 import com.collection.univapi.api.repository.AuditLogRepository;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
 
 @Service
 public class AuditService {
 
-    public final AuditLogRepository auditLogRepository;
+    private final AuditLogRepository auditLogRepository;
 
     public AuditService(AuditLogRepository auditLogRepository) {
         this.auditLogRepository = auditLogRepository;
     }
 
+    @Async
     public void log(String appId, String endpoint, String method, Integer statusCode, String errorMessage) {
         AuditLog auditLog = AuditLog.builder()
                 .appId(appId)
@@ -20,9 +24,9 @@ public class AuditService {
                 .method(method)
                 .statusCode(statusCode)
                 .errorMessage(errorMessage)
-                .timestamp(java.time.Instant.now())
+                .timestamp(Instant.now())
                 .build();
+
         auditLogRepository.save(auditLog);
     }
-
 }
