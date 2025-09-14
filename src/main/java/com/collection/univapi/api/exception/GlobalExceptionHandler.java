@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.io.FileNotFoundException;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -25,22 +27,62 @@ public class GlobalExceptionHandler {
         this.auditService = auditService;
     }
 
-    // 1. Handle generic exceptions
+
+
+    @ExceptionHandler(FileNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleFileNotFound(FileNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                        "status", "error",
+                        "message", "File not found",
+                        "details", ex.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<?> handleSecurity(SecurityException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UncheckedIOException.class)
+    public ResponseEntity<?> handleIO(UncheckedIOException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "File system error: " + ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleAllExceptions(Exception ex, HttpServletRequest request) {
-        return logAndRespond("An unexpected error occurred. Please contact support.", ex, request, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                        "status", "error",
+                        "message", "Unexpected error occurred",
+                        "details", ex.getMessage()
+                ));
     }
 
-    // 2. Handle not found exceptions
-    @ExceptionHandler({NoSuchElementException.class, FileNotFoundException.class})
-    public ResponseEntity<Map<String, Object>> handleNotFound(Exception ex, HttpServletRequest request) {
-        return logAndRespond("The requested resource was not found.", ex, request, HttpStatus.NOT_FOUND);
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidBase64(IllegalArgumentException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                        "status", "error",
+                        "message", "Invalid Base64 data",
+                        "details", ex.getMessage()
+                ));
     }
 
-    // 3. Handle bad requests
-    @ExceptionHandler({IllegalArgumentException.class, MethodArgumentNotValidException.class})
-    public ResponseEntity<Map<String, Object>> handleBadRequest(Exception ex, HttpServletRequest request) {
-        return logAndRespond("Invalid request parameters.", ex, request, HttpStatus.BAD_REQUEST);
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<Map<String, Object>> handleIOException(IOException ex) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                        "status", "error",
+                        "message", "File operation failed",
+                        "details", ex.getMessage()
+                ));
     }
 
     // Common method to log and respond safely
