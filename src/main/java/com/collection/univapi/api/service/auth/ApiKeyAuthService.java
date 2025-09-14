@@ -16,7 +16,7 @@ public class ApiKeyAuthService {
     }
 
     public boolean isValid(String appId, String apiKey) {
-        Optional<Application> app = applicationRepository.findbyAppIdAndApiKey(appId, apiKey);
+        Optional<Application> app = applicationRepository.findByAppIdAndApiKey(appId, apiKey);
         return app.isPresent();
     }
 }

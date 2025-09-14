@@ -7,8 +7,8 @@ import lombok.*;
 @Table(name = "applications")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Application {
 
@@ -16,8 +16,11 @@ public class Application {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String appId;
-    private String appSecret;
+    @Column(unique = true, nullable = false)
+    private String appId;   // public identifier
 
-    private String name;
+    @Column(nullable = false)
+    private String apiKey;  // secret key
+
+    private String name;    // optional: human-readable app name
 }
