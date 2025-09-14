@@ -24,6 +24,7 @@ public class AuditLog {
     private String method;
 
     private Integer statusCode;
+    private String errorMessage;
 
     private Instant timestamp;
 }

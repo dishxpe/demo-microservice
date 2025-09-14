@@ -13,15 +13,16 @@ public class AuditService {
         this.auditLogRepository = auditLogRepository;
     }
 
-    public void log (String appId, String endpoint, String method, Integer statusCode) {
+    public void log(String appId, String endpoint, String method, Integer statusCode, String errorMessage) {
         AuditLog auditLog = AuditLog.builder()
                 .appId(appId)
                 .endpoint(endpoint)
                 .method(method)
                 .statusCode(statusCode)
+                .errorMessage(errorMessage)
                 .timestamp(java.time.Instant.now())
                 .build();
-
         auditLogRepository.save(auditLog);
     }
+
 }
