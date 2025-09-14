@@ -23,6 +23,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.collection.univapi.api.service.util.PathUtil.normalize;
+
 @Service
 public class FileMetadataService {
 
@@ -65,7 +67,7 @@ public class FileMetadataService {
         Path targetFile = FileSecurityUtil.getTargetFile(request, baseDir);
 
         if (!Files.exists(targetFile)) {
-            throw new FileNotFoundException("File not found: " + targetFile);
+            throw new FileNotFoundException("File not found: " + normalize(targetFile));
         }
 
         return buildFileMetadata(targetFile, baseDir);

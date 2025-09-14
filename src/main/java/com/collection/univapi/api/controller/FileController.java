@@ -56,7 +56,7 @@ public class FileController {
         );
     }
 
-    @PostMapping("/delete")
+    @DeleteMapping("/delete")
     public Map<String, Object> deleteFile(@RequestBody FileRequest request) throws IOException {
         String result = localFileStorageService.deleteFile(request);
         return Map.of(
@@ -64,6 +64,7 @@ public class FileController {
                 "message", result
         );
     }
+
 
     @PostMapping("/move")
     public Map<String, Object> moveFile(
