@@ -1,4 +1,4 @@
-package com.collection.univapi.api.model;
+package com.collection.univapi.api.model.file;
 
 import java.time.Instant;
 
