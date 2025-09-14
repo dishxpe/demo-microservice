@@ -22,10 +22,24 @@ public class ApiKeyInterceptor implements HandlerInterceptor {
 
         if (appId == null || apiKey == null || !authService.isValid(appId, apiKey)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Invalid AppId or ApiKey");
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+
+            String json = """
+            {
+                "timestamp": "%s",
+                "status": 401,
+                "error": "Unauthorized",
+                "message": "Invalid AppId or ApiKey",
+                "path": "%s"
+            }
+            """.formatted(java.time.Instant.now(), request.getRequestURI());
+
+            response.getWriter().write(json);
             return false;
         }
 
         return true;
     }
+
 }
