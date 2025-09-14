@@ -1,4 +1,4 @@
-package com.collection.univapi.api.components;
+package com.collection.univapi.api.config;
 
 import com.collection.univapi.api.service.audit.AuditService;
 import jakarta.servlet.FilterChain;
