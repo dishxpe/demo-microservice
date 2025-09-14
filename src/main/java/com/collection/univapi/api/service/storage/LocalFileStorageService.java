@@ -11,20 +11,21 @@ import java.util.Base64;
 
 import static com.collection.univapi.api.service.util.FileSecurityUtil.getTargetDir;
 import static com.collection.univapi.api.service.util.FileSecurityUtil.getTargetFile;
+import static com.collection.univapi.api.service.util.PathUtil.normalize;
 
 @Service
 public class LocalFileStorageService {
+
     public String saveFile(FileRequest request) throws IOException {
         byte[] data = Base64.getDecoder().decode(request.getBase64Data());
 
         Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
-
         Files.createDirectories(getTargetDir(request, baseDir));
 
         Path targetFile = getTargetFile(request, baseDir);
         Files.write(targetFile, data);
 
-        return targetFile.toString();
+        return normalize(targetFile);
     }
 
 
@@ -38,11 +39,10 @@ public class LocalFileStorageService {
     }
 
     public String deleteFile(FileRequest request) throws IOException {
-
         Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
         Path targetFile = getTargetFile(request, baseDir);
 
         Files.deleteIfExists(targetFile);
-        return "File deleted successfully from: " + targetFile;
+        return "File deleted successfully from: " + normalize(targetFile);
     }
 }
